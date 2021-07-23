@@ -1,2 +1,2 @@
 # wallet-aggregator
-Aggrate your crypto holdings and display them in a single overview
+Aggrate your crypto holdings and display them in a single overview.
