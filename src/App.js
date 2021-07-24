@@ -1,10 +1,11 @@
 import './App.css';
+import PieChartContainer from './components/PieChartContainer/PieChartContainer';
 
 function App() {
+  
   return (
     <div className="App">
-      <header className="App-header">
-      </header>
+      <PieChartContainer/>
     </div>
   );
 }
