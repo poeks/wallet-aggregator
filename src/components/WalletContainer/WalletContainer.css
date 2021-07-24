@@ -1,0 +1,35 @@
+.container {
+    margin: 30px;
+    display: grid;
+    grid-template-columns: 50% 50%;
+    grid-template-rows: auto;
+    width: 750px;
+    box-shadow: rgba(0, 0, 0, 0.24) 0px 3px 8px;
+    border-radius: 6px;
+}
+
+.text {
+    padding: 20px;
+}
+
+.pie-chart {
+    grid-column: 1 / 2;
+    grid-row: 1 / 2;
+    height: 90%;
+    align-self: center;
+}
+
+.origin {
+    grid-column: 1 / 2;
+    grid-row: 2 / 3;
+}
+
+.list {
+    grid-column: 2 / 3;
+    grid-row: 1 / 2;
+}
+
+.estimated-value {
+    grid-column: 2 / 3;
+    grid-row: 2 / 3;
+}

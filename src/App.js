@@ -1,13 +1,14 @@
 import './App.css';
-import PieChartContainer from './components/PieChartContainer/PieChartContainer';
+import WalletList from './components/PieChartContainer/PieChartContainer';
 
 function App() {
   
   return (
     <div className="App">
-      <PieChartContainer/>
+      <WalletList/>
     </div>
   );
 }
+
 
 export default App;

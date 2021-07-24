@@ -1,5 +1,5 @@
 import React from 'react';
-import { PieChart } from 'react-minimal-pie-chart';
+import WalletContainer from '../WalletContainer/WalletContainer';
 
 
 const mockWalletData1 = {
@@ -31,48 +31,24 @@ const mockWalletData2 = {
             "color": "#E38627",
         },
         {
-            "asset":"USDT",
+            "asset":"ETH    ",
             "free":"5.89109409",
             "locked":"0.00000000",
-            "color": "#C13C37",
+            "color": "#918686",
         }
     ]
 }
 
 
-const getPieChartDataEntries = (asset) => {
-    console.log('asset: ', asset)
-    return ({title: asset.asset, value: parseFloat(asset.free) + parseFloat(asset.locked), color: asset.color});
-}
-
-
-const PieChartContainer = () => {
+const WalletList = () => {
 
   const walletData = [mockWalletData1, mockWalletData2];
 
     return (
         <div>
-            {walletData.map(wallet => {
-                console.log('wallet: ', wallet)
-                return (
-                    <div>
-                        <PieChart
-                        style={{height: '300px'}}
-                        label={({dataEntry}) => {return Math.round(dataEntry.percentage) + '%'}}
-                        data={wallet.balances.map(asset => getPieChartDataEntries(asset))}
-                        />
-                        {wallet.origin}
-                    </div>
-
-                )
-            }
-            )
-            }
-
+            {walletData.map(wallet => <WalletContainer wallet={wallet}/>)}
         </div>
-
     )
-
 }
 
-export default PieChartContainer;
+export default WalletList;
