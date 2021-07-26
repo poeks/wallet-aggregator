@@ -1,11 +1,12 @@
 import './App.css';
-import WalletList from './components/PieChartContainer/PieChartContainer';
+import WalletFeed from '../WalletFeed/WalletFeed';
+
 
 function App() {
   
   return (
     <div className="App">
-      <WalletList/>
+      <WalletFeed/>
     </div>
   );
 }

@@ -40,15 +40,15 @@ const mockWalletData2 = {
 }
 
 
-const WalletList = () => {
+const WalletFeed = () => {
 
   const walletData = [mockWalletData1, mockWalletData2];
 
     return (
         <div>
-            {walletData.map(wallet => <WalletContainer wallet={wallet}/>)}
+            {walletData.map((wallet, index) => <WalletContainer key={index} wallet={wallet}/>)}
         </div>
     )
 }
 
-export default WalletList;
+export default WalletFeed;

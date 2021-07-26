@@ -1,6 +1,11 @@
 import React from 'react';
-import { PieChart } from 'react-minimal-pie-chart';
 import './WalletContainer.css';
+import { PieChart } from 'react-minimal-pie-chart';
+import Typography from '@material-ui/core/Typography';
+import List from '@material-ui/core/List';
+import ListItem from '@material-ui/core/ListItem';
+import ListItemText from '@material-ui/core/ListItemText';
+import { USDFormatter } from '../../lib/currencyConverters';
 
 
 const getPieChartDataEntries = (asset) => {
@@ -13,7 +18,37 @@ const calculateEstimatedValue = (asset) => {
     return (parseFloat(asset.free) + parseFloat(asset.locked)) * price;
 }
 
-const USDFormatter = new Intl.NumberFormat('en-US', {style: 'currency', currency: 'USD'});
+const generateListItem = (wallet) => {
+    return (
+        wallet.balances.map((asset, index) => {
+            console.log(index)
+            return (
+                <ListItem key={index}>
+                    <ListItemText
+                        primary={asset.asset}
+                        secondary={USDFormatter.format(asset.free)}
+                    />
+                </ListItem>
+            )
+        })
+    )
+}
+
+const InteractiveList = ({ wallet }) => {
+
+    return (
+        <>
+            <Typography variant="h6">
+                Asset overview
+            </Typography>
+            <div>
+                <List dense={false}>
+                    {generateListItem(wallet)}
+                </List>
+            </div>
+        </>
+    );
+}
 
 const WalletContainer = ({wallet}) => {
     
@@ -30,9 +65,7 @@ const WalletContainer = ({wallet}) => {
                 {wallet.origin}
             </div>
             <div className='list'>
-                <ol>
-                    {wallet.balances.map(asset => <li>{asset.asset}</li>)}
-                </ol>
+                <InteractiveList wallet={wallet}/>
             </div>
             <div className='estimated-value text'>
                 Estimated value: {USDFormatter.format(totalAmount)}
