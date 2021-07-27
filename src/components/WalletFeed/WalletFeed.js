@@ -1,52 +1,32 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import WalletContainer from '../WalletContainer/WalletContainer';
+import CircularProgress from '@material-ui/core/CircularProgress';
 
+const fetchAndSetWalletData = async (setWallets) => {
 
-const mockWalletData1 = {
-    origin: 'Binance',
-    balances: [
-        {
-           "asset":"BTC",
-           "free":"0.09905021",
-           "locked":"0.00000000",
-           "color": "#E38627",
-        },
-        {
-           "asset":"USDT",
-           "free":"1.89109409",
-           "locked":"0.00000000",
-           "color": "#C13C37",
-        }
-     ]
-  }
+    const url = 'http://localhost:3001/wallets';
+    const res = await fetch(url);
+    const data = await res.json();
 
-
-const mockWalletData2 = {
-    origin: 'Kucoin',
-    balances: [
-        {
-            "asset":"BTC",
-            "free":"0.16",
-            "locked":"0.00000000",
-            "color": "#E38627",
-        },
-        {
-            "asset":"ETH    ",
-            "free":"5.89109409",
-            "locked":"0.00000000",
-            "color": "#918686",
-        }
-    ]
+    setWallets([data]);
 }
-
 
 const WalletFeed = () => {
 
-  const walletData = [mockWalletData1, mockWalletData2];
+    const [wallets, setWallets] = useState([]);
+
+    useEffect(() => {
+        try {
+            fetchAndSetWalletData(setWallets);
+        } catch (err) {
+            console.log(err);
+        }
+    }, []
+    )
 
     return (
         <div>
-            {walletData.map((wallet, index) => <WalletContainer key={index} wallet={wallet}/>)}
+            {wallets.length > 0 ? wallets.map((wallet, index) => <WalletContainer key={index} wallet={wallet}/>) : <CircularProgress/>}
         </div>
     )
 }
