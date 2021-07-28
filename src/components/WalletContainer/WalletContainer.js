@@ -38,7 +38,6 @@ const sortAndGroupWalletAssets = (wallet) => {
     const smallBalancesAmount = smallBalances.reduce((acc, cur) => acc + cur.amount, 0);
 
     assets.push({asset: 'other', amount: smallBalancesAmount})
-    console.log('MARK 3', wallet)
     return wallet
 }
 

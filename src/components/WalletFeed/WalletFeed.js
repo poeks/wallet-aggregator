@@ -8,7 +8,7 @@ const fetchAndSetWalletData = async (setWallets) => {
     const res = await fetch(url);
     const data = await res.json();
 
-    setWallets([data]);
+    setWallets(data);
 }
 
 const WalletFeed = () => {
