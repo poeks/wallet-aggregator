@@ -1,12 +1,13 @@
-import React from 'react';
-import './WalletContainer.css';
+import React, { useState } from 'react';
 import { PieChart } from 'react-minimal-pie-chart';
+import _ from 'lodash';
+import './WalletContainer.css';
 import Typography from '@material-ui/core/Typography';
 import List from '@material-ui/core/List';
 import ListItem from '@material-ui/core/ListItem';
 import ListItemText from '@material-ui/core/ListItemText';
+import Checkbox from '@material-ui/core/Checkbox';
 import { USDFormatter } from '../../lib/currencyConverters';
-
 
 const defaultLabelStyle = {
     fontSize: '5px',
@@ -20,25 +21,19 @@ const getRandomColor = () => {
 }
 
 const getPieChartDataEntries = (asset) => {
-    return ({title: asset.asset, value: asset.amount, color: getRandomColor()});
+    return ({title: asset.symbol, value: asset.value, color: getRandomColor()});
 }
 
-const calculateEstimatedValue = (asset) => {
-    // TODO Fetch price from API (could also be done in backend)
-    const price = 10;
-    return asset.amount * price;
-}
-
-const sortAndGroupWalletAssets = (wallet) => {
-    const assets = wallet.assets;
-    assets.sort((a, b) => {
-        return b.amount - a.amount;
-    })
-    const smallBalances = assets.splice(5);
-    const smallBalancesAmount = smallBalances.reduce((acc, cur) => acc + cur.amount, 0);
-
-    assets.push({asset: 'other', amount: smallBalancesAmount})
-    return wallet
+const groupSmallBalances = (assets) => {
+    const newAssets = _.cloneDeep(assets);
+    const splitIndex = newAssets.findIndex(asset => asset.value < 10);
+    if (splitIndex === -1) {
+        return newAssets;
+    }
+    const smallBalances = newAssets.splice(splitIndex);
+    const smallBalancesAmount = smallBalances.reduce((acc, cur) => acc + cur.value, 0);
+    newAssets.push({symbol: 'Other', value: smallBalancesAmount})
+    return newAssets;
 }
 
 const generateListItems = (assets) => {
@@ -48,8 +43,8 @@ const generateListItems = (assets) => {
             return (
                 <ListItem key={index}>
                     <ListItemText
-                        primary={asset.asset}
-                        secondary={USDFormatter.format(asset.amount)}
+                        primary={asset.symbol}
+                        secondary={USDFormatter.format(asset.value)}
                     />
                 </ListItem>
             )
@@ -57,15 +52,21 @@ const generateListItems = (assets) => {
     )
 }
 
-const InteractiveList = ({wallet}) => {
+const InteractiveList = ({assets, onCheckBoxClick}) => {
     return (
         <>
             <Typography variant="h6">
                 Asset overview
             </Typography>
+            <div className='checkbox-container'>
+                <Checkbox onChange={onCheckBoxClick}/>
+                <Typography variant="subtitle2">
+                    Show small balances
+                </Typography>
+            </div>
             <div>
-                <List dense={true} disablePadding={true}>
-                    {generateListItems(wallet.assets)}
+                <List className='list' dense={true} disablePadding={true}>
+                    {generateListItems(assets)}
                 </List>
             </div>
         </>
@@ -74,23 +75,31 @@ const InteractiveList = ({wallet}) => {
 
 const WalletContainer = ({wallet}) => {
 
-    const totalAmount = wallet.assets.reduce((acc, cur) => acc + calculateEstimatedValue(cur), 0);
-    const walletWithGroupedAssets = sortAndGroupWalletAssets(wallet);
+    const [showSmallBalances, setShowSmallBalances] = useState(false);
+
+    const onCheckBoxClick = (event) => {
+        console.log(event.target.checked)
+        setShowSmallBalances(event.target.checked);
+    }
+
+    const totalAmount = wallet.assets.reduce((acc, asset) => acc + asset.value, 0);
+    const assets = showSmallBalances ? wallet.assets : groupSmallBalances(wallet.assets);
 
     return (
         <div className='container'>
             <PieChart
                 className='pie-chart'
                 label={({dataEntry}) => {return Math.round(dataEntry.percentage) + '%'}}
-                data={walletWithGroupedAssets.assets.map(asset => getPieChartDataEntries(asset))}
+                data={assets.map(asset => getPieChartDataEntries(asset))}
                 animate={true}
                 labelStyle={defaultLabelStyle}
+                labelPosition={110}
             />
             <div className='origin text'>
-                {walletWithGroupedAssets.origin}
+                {wallet.origin}
             </div>
-            <div className='list'>
-                <InteractiveList wallet={walletWithGroupedAssets}/>
+            <div className='list-container'>
+                <InteractiveList assets={assets} onCheckBoxClick={onCheckBoxClick}/>
             </div>
             <div className='estimated-value text'>
                 Estimated value: {USDFormatter.format(totalAmount)}

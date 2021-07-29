@@ -6,6 +6,8 @@
     width: 750px;
     box-shadow: rgba(0, 0, 0, 0.24) 0px 3px 8px;
     border-radius: 6px;
+    /* max-height: 80%; */
+    /* height: 80% */
 }
 
 .text {
@@ -15,7 +17,7 @@
 .pie-chart {
     grid-column: 1 / 2;
     grid-row: 1 / 2;
-    height: 90%;
+    height: 80%;
     align-self: center;
 }
 
@@ -24,11 +26,21 @@
     grid-row: 2 / 3;
 }
 
-.list {
+.list-container {
     grid-column: 2 / 3;
     grid-row: 1 / 2;
 }
 
+.list {
+    max-height: 300px;
+    overflow: auto;
+}
+
+.checkbox-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
 .estimated-value {
     grid-column: 2 / 3;
     grid-row: 2 / 3;

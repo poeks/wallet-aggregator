@@ -7,7 +7,6 @@ const fetchAndSetWalletData = async (setWallets) => {
     const url = 'http://localhost:3001/wallets';
     const res = await fetch(url);
     const data = await res.json();
-
     setWallets(data);
 }
 
