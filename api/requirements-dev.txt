@@ -1,0 +1,7 @@
+black==21.9b0
+isort==5.9.3
+mypy==v0.910-1
+pre-commit==2.15.0
+types-requests==2.25.9
+pytest==6.2.5
+uvicorn==0.15.0
