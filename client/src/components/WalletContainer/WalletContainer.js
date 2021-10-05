@@ -26,14 +26,15 @@ const getPieChartDataEntries = (asset) => {
 
 const groupSmallBalances = (assets) => {
     const newAssets = _.cloneDeep(assets);
-    const splitIndex = newAssets.findIndex(asset => asset.value < 10);
-    if (splitIndex === -1) {
-        return newAssets;
-    }
-    const smallBalances = newAssets.splice(splitIndex);
-    const smallBalancesAmount = smallBalances.reduce((acc, cur) => acc + cur.value, 0);
-    newAssets.push({symbol: 'Other', value: smallBalancesAmount})
-    return newAssets;
+    const smallBalanceTreshold = 10;
+    const assetsBelowTreshold = [];
+    const assetsAboveTreshold = [];
+
+    newAssets.forEach(asset => asset.value < smallBalanceTreshold ? assetsBelowTreshold.push(asset) : assetsAboveTreshold.push(asset));
+
+    const smallBalancesAmount = assetsBelowTreshold.reduce((acc, cur) => acc + cur.value, 0);
+    assetsAboveTreshold.push({symbol: 'Total small balances', value: smallBalancesAmount})
+    return assetsAboveTreshold;
 }
 
 const generateListItems = (assets) => {
@@ -82,8 +83,9 @@ const WalletContainer = ({wallet}) => {
         setShowSmallBalances(event.target.checked);
     }
 
-    const totalAmount = wallet.assets.reduce((acc, asset) => acc + asset.value, 0);
-    const assets = showSmallBalances ? wallet.assets : groupSmallBalances(wallet.assets);
+    // const totalAmount = wallet.assets.reduce((acc, asset) => acc + asset.value, 0);
+    const totalAmount = wallet.total_value
+    const assets = showSmallBalances ? wallet.balances : groupSmallBalances(wallet.balances);
 
     return (
         <div className='container'>
@@ -96,7 +98,7 @@ const WalletContainer = ({wallet}) => {
                 labelPosition={110}
             />
             <div className='origin text'>
-                {wallet.origin}
+                {wallet.name}
             </div>
             <div className='list-container'>
                 <InteractiveList assets={assets} onCheckBoxClick={onCheckBoxClick}/>

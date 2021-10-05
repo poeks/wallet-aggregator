@@ -4,10 +4,10 @@ import CircularProgress from '@material-ui/core/CircularProgress';
 
 const fetchAndSetWalletData = async (setWallets) => {
 
-    const url = 'http://localhost:3001/wallets';
+    const url = 'http://localhost:3001/wallets/current';
     const res = await fetch(url);
     const data = await res.json();
-    setWallets(data);
+    setWallets(data.data);
 }
 
 const WalletFeed = () => {
