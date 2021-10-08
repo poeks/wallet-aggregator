@@ -37,8 +37,6 @@ def get_kucoin_wallet() -> "Wallet":
 
     All timestamps are in miliseconds.
     """
-    # settings = Settings()
-    # s.verify_kucoin_credentials()
     s = Settings().get_kucoin_credentials()
 
     # See https://docs.kucoin.com/#authentication.
