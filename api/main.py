@@ -1,11 +1,13 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
+from config import IncompleteSettingsError
 from schemas import QuotedWallet
 from schemas import Wallet
 from schemas import WalletsCurrent
 from services.binance import get_binance_wallet
 from services.coinmarketcap import get_quoted_wallet
+from services.kucoin import get_kucoin_wallet
 
 app = FastAPI()
 
@@ -25,8 +27,16 @@ def wallets():
 
 @app.get("/wallets/current", response_model=WalletsCurrent)
 def current_wallets() -> WalletsCurrent:
-    wallet = get_binance_wallet()
 
-    quoted_wallet = get_quoted_wallet(wallet)
+    wallets = (get_binance_wallet(), get_kucoin_wallet())
 
-    return WalletsCurrent(data=[quoted_wallet])
+    quoted_wallets = []
+    for wallet in wallets:
+        try:
+            quoted_wallets.append(get_quoted_wallet(wallet))
+        except IncompleteSettingsError:
+            continue
+
+    quoted_wallets = [get_quoted_wallet(wallet) for wallet in wallets]
+
+    return WalletsCurrent(data=quoted_wallets)
