@@ -7,6 +7,7 @@ from schemas import Wallet
 from schemas import WalletsCurrent
 from services.binance import get_binance_wallet
 from services.coinmarketcap import get_quoted_wallet
+from services.ethereum import get_ethereum_wallet
 from services.kucoin import get_kucoin_wallet
 
 app = FastAPI()
@@ -28,7 +29,7 @@ def wallets():
 @app.get("/wallets/current", response_model=WalletsCurrent)
 def current_wallets() -> WalletsCurrent:
 
-    wallets = (get_binance_wallet(), get_kucoin_wallet())
+    wallets = (get_binance_wallet(), get_kucoin_wallet(), get_ethereum_wallet())
 
     quoted_wallets = []
     for wallet in wallets:
