@@ -18,6 +18,8 @@ class Settings(BaseSettings):
     binance_api_key: str
     binance_secret: str
     coinmarketcap_api_key: str
+    celsius_api_key: str
+    celsius_partner_token: str
 
     kucoin_api_key: Optional[str] = None
     kucoin_secret: Optional[str] = None

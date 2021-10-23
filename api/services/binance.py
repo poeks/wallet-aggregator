@@ -14,6 +14,10 @@ from config import Settings
 from schemas import Balance
 from schemas import Wallet
 
+BINANCE_HOST = "https://api.binance.com"
+ACCOUNT_SNAPSHOT_PATH = "/sapi/v1/accountSnapshot"
+INVALID_SYMBOLS = {"LDBNB"}  # Locked BNB
+
 
 class _BinanceAsset(BaseModel):
     asset: str
@@ -21,16 +25,10 @@ class _BinanceAsset(BaseModel):
     locked: float
 
 
-BINANCE_HOST = "https://api.binance.com"
-ACCOUNT_SNAPSHOT_PATH = "/sapi/v1/accountSnapshot"
-INVALID_SYMBOLS = {"LDBNB"}  # Locked BNB
-
 settings = Settings()
 
 
 def get_binance_wallet() -> Wallet:
-    s = Settings()
-
     url = BINANCE_HOST + ACCOUNT_SNAPSHOT_PATH
 
     payload: Dict[str, Union[str, int]] = {
@@ -42,7 +40,7 @@ def get_binance_wallet() -> Wallet:
     payload["signature"] = _get_hmac(message)
 
     headers = {
-        "X-MBX-APIKEY": s.binance_api_key,
+        "X-MBX-APIKEY": settings.binance_api_key,
     }
 
     res = r.get(url, params=payload, headers=headers)
