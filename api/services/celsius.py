@@ -1,18 +1,15 @@
+from datetime import datetime
+from typing import Dict
+
+import requests
 import requests as r
+from pydantic import BaseModel
 
 from config import Settings
 from schemas import Balance
 from schemas import Wallet
 
 CELSIUS_HOST = "https://wallet-api.celsius.network"
-
-settings = Settings()
-
-from datetime import datetime
-from typing import Dict
-
-import requests
-from pydantic import BaseModel
 
 
 class _CelsiusWallet(BaseModel):
