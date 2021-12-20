@@ -1,7 +1,5 @@
 from copy import deepcopy
-from datetime import date
 from datetime import datetime
-from enum import Enum
 from typing import ClassVar
 from typing import Dict
 from typing import List
@@ -11,11 +9,11 @@ from typing import Set
 import requests as r
 from pydantic import BaseModel
 
-from config import Settings
-from schemas import Balance
-from schemas import QuotedBalance
-from schemas import QuotedWallet
-from schemas import Wallet
+from ..config import Settings
+from ..schemas import Balance
+from ..schemas import QuotedBalance
+from ..schemas import QuotedWallet
+from ..schemas import Wallet
 
 s = Settings()
 
@@ -76,6 +74,12 @@ class CoinMarketCapQuotes(BaseModel):
     _symbol_asset_map: Dict[str, str]
 
     def __init__(self, **kwargs):
+        # TODO think of a better place where to filter. Why did this came up in the first place, airdrop?
+        kwargs["data"] = {
+            id: quote
+            for id, quote in kwargs["data"].items()
+            if None not in quote["quote"]["USD"].values()
+        }
         super().__init__(**kwargs)
         # if https://github.com/samuelcolvin/pydantic/pull/2625 is merged, ComputedField can be used
         object.__setattr__(

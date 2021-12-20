@@ -4,9 +4,9 @@ from typing import List
 
 import requests as r
 
-from config import Settings
-from schemas import Balance
-from schemas import Wallet
+from ..config import Settings
+from ..schemas import Balance
+from ..schemas import Wallet
 
 AMBERDATA_HOST = "https://web3api.io/"
 
@@ -41,7 +41,7 @@ def _get_ethereum_balance(address: str, headers: Dict[str, str]) -> Balance:
     data = res.json()
 
     return Balance(
-        symbol="ETH", amount=float(_convert_wei_to_eth(data["payload"]["value"]))
+        symbol="ETH", amount=_convert_wei_to_eth(float(data["payload"]["value"]))
     )
 
 
