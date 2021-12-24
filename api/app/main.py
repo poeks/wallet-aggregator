@@ -22,7 +22,8 @@ app.add_middleware(CORSMiddleware, allow_origins=origins)
 @app.get("/wallets")
 def wallets():
     """Returns an overview of activated exchange accounts and wallets"""
-    payload = {"test": "there should be walllet info here"}
+    payload = {"wallets": ["there should be walllet info here"]}
+    return payload
 
 
 @app.get("/wallets/current", response_model=WalletsCurrent)

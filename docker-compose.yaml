@@ -1,0 +1,13 @@
+version: "3.9"  # optional since v1.27.0
+services:
+
+  api:
+    container_name: api
+    build:
+      context: ./api
+    ports:
+      - "3001:80"
+    volumes:
+      - ./api/.env:/code/.env
+      - ./api/app:/code/app
+    command: uvicorn app.main:app --host 0.0.0.0 --port 80 --reload
