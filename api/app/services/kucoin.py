@@ -4,16 +4,15 @@ import hmac
 import time
 from collections import defaultdict
 from datetime import datetime
-from typing import ClassVar
 from typing import Dict
 from typing import List
 
 import requests as r
 from pydantic import BaseModel
 
-from config import Settings
-from schemas import Balance
-from schemas import Wallet
+from ..config import Settings
+from ..schemas import Balance
+from ..schemas import Wallet
 
 KUCOIN_HOST = "https://api.kucoin.com"
 

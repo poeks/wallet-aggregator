@@ -1,6 +1,5 @@
 import hashlib
 import hmac
-import os
 from datetime import datetime
 from typing import Dict
 from typing import List
@@ -10,9 +9,9 @@ from urllib.parse import urlencode
 import requests as r
 from pydantic import BaseModel
 
-from config import Settings
-from schemas import Balance
-from schemas import Wallet
+from ..config import Settings
+from ..schemas import Balance
+from ..schemas import Wallet
 
 BINANCE_HOST = "https://api.binance.com"
 ACCOUNT_SNAPSHOT_PATH = "/sapi/v1/accountSnapshot"
@@ -61,7 +60,6 @@ def _filter_invalid_balances(balances: List[_BinanceAsset]) -> List[_BinanceAsse
     filtered_balances = []
     for balance in balances:
         if balance.asset in INVALID_SYMBOLS:
-            print(balance.free)  # check if this is BNB
             continue
         if balance.free <= 0:
             continue

@@ -2,12 +2,11 @@ from datetime import datetime
 from typing import Dict
 
 import requests
-import requests as r
 from pydantic import BaseModel
 
-from config import Settings
-from schemas import Balance
-from schemas import Wallet
+from ..config import Settings
+from ..schemas import Balance
+from ..schemas import Wallet
 
 CELSIUS_HOST = "https://wallet-api.celsius.network"
 
@@ -15,14 +14,19 @@ CELSIUS_HOST = "https://wallet-api.celsius.network"
 class _CelsiusWallet(BaseModel):
     balance: Dict[str, float]
 
-    def get_wallet(self) -> Wallet:
+    def get_wallet(self, filter_empty_balances: bool = True) -> Wallet:
+        balances = [
+            Balance(symbol=symbol.upper(), amount=amount)
+            for symbol, amount in self.balance.items()
+        ]
+
+        if filter_empty_balances:
+            balances = [balance for balance in balances if balance.amount > 0]
+
         return Wallet(
             name="Celsius",
             date=datetime.now(),
-            balances=[
-                Balance(symbol=symbol.upper(), amount=amount)
-                for symbol, amount in self.balance.items()
-            ],
+            balances=balances,
         )
 
 
