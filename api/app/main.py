@@ -19,6 +19,13 @@ origins = [
 app.add_middleware(CORSMiddleware, allow_origins=origins)
 
 
+@app.get("/health")
+def health():
+    """Health check is service is available"""
+    payload = {"status": "ok"}
+    return payload
+
+
 @app.get("/wallets")
 def wallets():
     """Returns an overview of activated exchange accounts and wallets"""
