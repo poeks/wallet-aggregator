@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import './WalletFeed.css';
 import WalletContainer from '../WalletContainer/WalletContainer';
 import CircularProgress from '@material-ui/core/CircularProgress';
 
@@ -24,7 +25,7 @@ const WalletFeed = () => {
     )
 
     return (
-        <div>
+        <div className="WalletFeed">
             {wallets.length > 0 ? wallets.map((wallet, index) => <WalletContainer key={index} wallet={wallet}/>) : <CircularProgress/>}
         </div>
     )
