@@ -2,12 +2,15 @@ from datetime import datetime
 from json.decoder import JSONDecodeError
 from typing import Dict
 from typing import List
+from typing import Set
 from typing import Tuple
 
 import requests as r
 
 from ..config import IncompleteCredentialsError
 from ..config import Settings
+from ..credentials import CredentialsStatusOut
+from ..credentials import WalletCredentialsStatus
 from ..schemas import Balance
 from ..schemas import Wallet
 
@@ -28,7 +31,7 @@ def get_ethereum_wallet() -> Wallet:
     tokens = _get_erc20_tokens_balances(address, headers=credentials.headers)
     balances.extend(tokens)
 
-    return Wallet(name="Ethereum", date=datetime.now(), balances=balances)
+    return Wallet(name="Metamask", date=datetime.now(), balances=balances)
 
 
 def _convert_wei_to_eth(value: float) -> float:
@@ -77,10 +80,10 @@ def health_check() -> Tuple[bool, str]:
     url = AMBERDATA_HOST + "/health"
     res = r.get(url, headers={})
 
-    from pprint import pprint
-
-    data = res.json()
-    pprint(data)
+    try:
+        data = res.json()
+    except JSONDecodeError as e:
+        return False, str(e)
 
     if not res.ok:
         return False, res.reason
@@ -106,3 +109,62 @@ def health_check() -> Tuple[bool, str]:
         return False, "Response from AmberData not ok"
 
     return True, "ok"
+
+
+class AmberDataCredentialsStatus(WalletCredentialsStatus):
+    @property
+    def name(self) -> str:
+        return "AmberData"
+
+    @property
+    def credential_fields(self) -> Set[str]:
+        return {"api_key", "secret"}
+
+
+def get_credentials_status() -> CredentialsStatusOut:
+    """
+    Verifies:
+        - credentials are submitted
+        - API key has read access
+        - Ethereum wallet address exists
+    """
+    settings = Settings()
+    reason = None
+    try:
+        credentials = settings.get_amberdata_credentials()
+        credentials_submitted = True
+    except IncompleteCredentialsError as e:
+        credentials_submitted = False
+        reason = str(e)
+
+    try:
+        address = settings.get_ethereum_wallet_address()
+    except IncompleteCredentialsError as e:
+        if reason:
+            reason += f"/{str(e)}"
+        else:
+            reason = str(e)
+
+    status = AmberDataCredentialsStatus(credentials_submitted=credentials_submitted)
+
+    if not all([credentials_submitted, address]):
+        return status.response_model(reason=reason)
+
+    url = AMBERDATA_HOST + f"/api/v2/addresses?hash={address}"
+    headers = credentials.headers
+    res = r.get(url, headers=headers)
+
+    if not res.ok:
+        return status.response_model(reason=res.reason)
+
+    try:
+        data = res.json()
+    except JSONDecodeError as e:
+        return status.response_model(reason=str(e))
+
+    if not data["payload"]["totalRecords"]:
+        return status.response_model(reason=f"Wallet address '{address}' unknown")
+
+    status.credentials_valid = True
+
+    return status.response_model()

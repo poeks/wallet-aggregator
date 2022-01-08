@@ -9,6 +9,7 @@ from .services.celsius import get_celsius_wallet
 from .services.celsius import get_credentials_status as get_celsius_status
 from .services.coinmarketcap import get_quoted_wallet
 from .services.coinmarketcap import health_check as coinmarketcap_health_check
+from .services.ethereum import get_credentials_status as get_ethereum_status
 from .services.ethereum import get_ethereum_wallet
 from .services.ethereum import health_check as amberdata_health_check
 from .services.kucoin import get_credentials_status as get_kucoin_status
@@ -26,7 +27,7 @@ app.add_middleware(CORSMiddleware, allow_origins=origins)
 
 @app.get("/health")
 def health():
-    """Health check is service is available"""
+    """Health check if services are available"""
 
     cmc_is_healthy, cmc_message = coinmarketcap_health_check()
     ad_is_healthy, ad_message = amberdata_health_check()
@@ -43,7 +44,12 @@ def health():
 def wallets():
     """Returns an overview of activated exchange accounts and wallets"""
 
-    wallets = [get_binance_status(), get_kucoin_status(), get_celsius_status()]
+    wallets = [
+        get_binance_status(),
+        get_kucoin_status(),
+        get_celsius_status(),
+        get_ethereum_status(),
+    ]
 
     return wallets
 
