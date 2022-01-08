@@ -1,9 +1,10 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from .config import IncompleteSettingsError
+from .config import IncompleteCredentialsError
 from .schemas import WalletsCurrent
 from .services.binance import get_binance_wallet
+from .services.binance import get_credentials_status as get_binance_status
 from .services.celsius import get_celsius_wallet
 from .services.coinmarketcap import get_quoted_wallet
 from .services.coinmarketcap import health_check as coinmarketcap_health_check
@@ -36,16 +37,20 @@ def health():
     return payload
 
 
-@app.get("/wallets")
+@app.get("/wallets/status")
 def wallets():
     """Returns an overview of activated exchange accounts and wallets"""
-    payload = {"wallets": ["there should be walllet info here"]}
-    return payload
+
+    wallets = [get_binance_status()]
+
+    return wallets
 
 
 @app.get("/wallets/current", response_model=WalletsCurrent)
 def current_wallets() -> WalletsCurrent:
 
+    # TODO run async?
+    # TODO catch IncompleteSettingsError. What to do? Return?
     wallets = (
         get_binance_wallet(),
         get_kucoin_wallet(),
@@ -57,7 +62,7 @@ def current_wallets() -> WalletsCurrent:
     for wallet in wallets:
         try:
             quoted_wallets.append(get_quoted_wallet(wallet))
-        except IncompleteSettingsError:
+        except IncompleteCredentialsError:
             continue  # TODO send back errorneous wallets in response
             """
             {

@@ -4,8 +4,19 @@ from typing import Optional
 from pydantic import BaseSettings
 
 
-class IncompleteSettingsError(ValueError):
+class IncompleteCredentialsError(ValueError):
     pass
+
+
+class BinanceCredentials(BaseSettings):
+    api_key: str
+    secret: str
+
+    @property
+    def headers(self) -> Dict[str, str]:
+        return {
+            "X-MBX-APIKEY": self.api_key,
+        }
 
 
 class KuCoinCredentials(BaseSettings):
@@ -40,8 +51,8 @@ class Settings(BaseSettings):
     amberdata_api_key: Optional[str] = None
 
     # Wallet API keys.
-    binance_api_key: str
-    binance_secret: str
+    binance_api_key: Optional[str] = None
+    binance_secret: Optional[str] = None
 
     celsius_api_key: str
     celsius_partner_token: str
@@ -57,22 +68,31 @@ class Settings(BaseSettings):
 
     def get_coinmarketcap_credentials(self) -> CoinMarketCapCredentials:
         if self.coinmarketcap_api_key is None:
-            raise IncompleteSettingsError("No CoinMarketcap API key available")
+            raise IncompleteCredentialsError("No CoinMarketcap API key available")
         return CoinMarketCapCredentials(api_key=self.coinmarketcap_api_key)
 
     def get_amberdata_credentials(self) -> AmberDataCredentials:
         if self.amberdata_api_key is None:
-            raise IncompleteSettingsError("No Amber API key available")
+            raise IncompleteCredentialsError("No Amber API key available")
         return AmberDataCredentials(api_key=self.amberdata_api_key)
 
     def get_ethereum_wallet_address(self) -> str:
         if self.ethereum_wallet_address is None:
-            raise IncompleteSettingsError("No ethereum wallet address available")
+            raise IncompleteCredentialsError("No ethereum wallet address available")
         return self.ethereum_wallet_address
+
+    def get_binance_credentials(self) -> BinanceCredentials:
+        if not all({self.binance_api_key, self.binance_secret}):
+            raise IncompleteCredentialsError("Binance credentials incomplete")
+
+        return BinanceCredentials(
+            api_key=self.binance_api_key,
+            secret=self.binance_secret,
+        )
 
     def get_kucoin_credentials(self) -> KuCoinCredentials:
         if not all({self.kucoin_api_key, self.kucoin_secret, self.kucoin_passphrase}):
-            raise IncompleteSettingsError("Kucoin credentials incomplete")
+            raise IncompleteCredentialsError("Kucoin credentials incomplete")
 
         return KuCoinCredentials(
             kucoin_api_key=self.kucoin_api_key,

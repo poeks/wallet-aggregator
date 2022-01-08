@@ -6,7 +6,7 @@ from typing import Tuple
 
 import requests as r
 
-from ..config import IncompleteSettingsError
+from ..config import IncompleteCredentialsError
 from ..config import Settings
 from ..schemas import Balance
 from ..schemas import Wallet
@@ -71,7 +71,7 @@ def health_check() -> Tuple[bool, str]:
 
     try:
         s.get_coinmarketcap_credentials()
-    except IncompleteSettingsError as e:
+    except IncompleteCredentialsError as e:
         return False, str(e)
 
     url = AMBERDATA_HOST + "/health"
