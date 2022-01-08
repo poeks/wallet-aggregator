@@ -6,6 +6,7 @@ from .schemas import WalletsCurrent
 from .services.binance import get_binance_wallet
 from .services.binance import get_credentials_status as get_binance_status
 from .services.celsius import get_celsius_wallet
+from .services.celsius import get_credentials_status as get_celsius_status
 from .services.coinmarketcap import get_quoted_wallet
 from .services.coinmarketcap import health_check as coinmarketcap_health_check
 from .services.ethereum import get_ethereum_wallet
@@ -42,10 +43,7 @@ def health():
 def wallets():
     """Returns an overview of activated exchange accounts and wallets"""
 
-    wallets = [
-        # get_binance_status(),
-        get_kucoin_status()
-    ]
+    wallets = [get_binance_status(), get_kucoin_status(), get_celsius_status()]
 
     return wallets
 
@@ -56,10 +54,10 @@ def current_wallets() -> WalletsCurrent:
     # TODO run async?
     # TODO catch IncompleteSettingsError. What to do? Return?
     wallets = (
-        # get_binance_wallet(),
+        get_binance_wallet(),
         get_kucoin_wallet(),
-        # get_ethereum_wallet(),
-        # get_celsius_wallet(),
+        get_ethereum_wallet(),
+        get_celsius_wallet(),
     )
 
     quoted_wallets = []

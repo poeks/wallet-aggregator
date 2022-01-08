@@ -79,25 +79,23 @@ def get_credentials_status() -> CredentialsStatusOut:
     """
     try:
         credentials = Settings().get_kucoin_credentials()
-    except IncompleteCredentialsError:
-        return KucoinCredentialsStatus(reason="Credentials incomplete").response_model()
+    except IncompleteCredentialsError as e:
+        return KucoinCredentialsStatus().response_model(reason=str(e))
+
+    status = KucoinCredentialsStatus(credentials_submitted=True)
 
     uri_path = "/api/v1/accounts"
     url = KUCOIN_HOST + uri_path
     headers = credentials.headers(uri_path=uri_path)
     res = r.get(url, headers=headers)
 
-    status = KucoinCredentialsStatus(credentials_submitted=True)
-
     if not res.ok:
-        status.reason = res.reason
-        return status.response_model()
+        return status.response_model(reason=res.reason)
 
     try:
-        data = res.json()
+        res.json()
     except JSONDecodeError as e:
-        status.reason = str(e)
-        return status
+        return status.response_model(reason=str(e))
 
     status.credentials_valid = True
 

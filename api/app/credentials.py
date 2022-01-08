@@ -31,10 +31,11 @@ class WalletCredentialsStatus(BaseModel, ABC):
     def credential_fields(self) -> Set[str]:
         raise NotImplementedError
 
-    def response_model(self) -> CredentialsStatusOut:
+    def response_model(self, reason: Optional[str] = None) -> CredentialsStatusOut:
         return CredentialsStatusOut(
             name=self.name,
             credentials_submitted=self.credentials_submitted,
             credentials_valid=self.credentials_valid,
             credential_fields=self.credential_fields,
+            reason=reason,
         )

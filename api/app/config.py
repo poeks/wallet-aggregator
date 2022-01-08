@@ -6,6 +6,7 @@ from typing import Dict
 from typing import Optional
 from typing import Union
 
+from pydantic import BaseModel
 from pydantic import BaseSettings
 
 
@@ -13,7 +14,7 @@ class IncompleteCredentialsError(ValueError):
     pass
 
 
-class BinanceCredentials(BaseSettings):
+class BinanceCredentials(BaseModel):
     api_key: str
     secret: str
 
@@ -24,7 +25,7 @@ class BinanceCredentials(BaseSettings):
         }
 
 
-class KuCoinCredentials(BaseSettings):
+class KuCoinCredentials(BaseModel):
     api_key: str
     secret: str
     passphrase: str
@@ -60,7 +61,7 @@ class KuCoinCredentials(BaseSettings):
         }
 
 
-class AmberDataCredentials(BaseSettings):
+class AmberDataCredentials(BaseModel):
     api_key: str
 
     @property
@@ -68,14 +69,27 @@ class AmberDataCredentials(BaseSettings):
         return {"x-api-key": self.api_key}
 
 
-class CoinMarketCapCredentials(BaseSettings):
+class CoinMarketCapCredentials(BaseModel):
     api_key: str
 
     @property
     def headers(self) -> Dict[str, str]:
+        """See https://documenter.getpostman.com/view/15615753/TzeTJ9VL#authentication"""
         return {
             "X-CMC_PRO_API_KEY": self.api_key,
             "Accept": "application/json",
+        }
+
+
+class CelciusCredentials(BaseModel):
+    api_key: str
+    partner_token: str
+
+    @property
+    def headers(self) -> Dict[str, str]:
+        return {
+            "X-Cel-Api-Key": self.api_key,
+            "X-Cel-Partner-Token": self.partner_token,
         }
 
 
@@ -89,8 +103,8 @@ class Settings(BaseSettings):
     binance_api_key: Optional[str] = None
     binance_secret: Optional[str] = None
 
-    celsius_api_key: str
-    celsius_partner_token: str
+    celsius_api_key: Optional[str] = None
+    celsius_partner_token: Optional[str] = None
 
     kucoin_api_key: Optional[str] = None
     kucoin_secret: Optional[str] = None
@@ -127,10 +141,19 @@ class Settings(BaseSettings):
 
     def get_kucoin_credentials(self) -> KuCoinCredentials:
         if not all({self.kucoin_api_key, self.kucoin_secret, self.kucoin_passphrase}):
-            raise IncompleteCredentialsError("Kucoin credentials incomplete")
+            raise IncompleteCredentialsError("KuCoin credentials incomplete")
 
         return KuCoinCredentials(
             api_key=self.kucoin_api_key,
             secret=self.kucoin_secret,
             passphrase=self.kucoin_passphrase,
+        )
+
+    def get_celcius_credentials(self) -> CelciusCredentials:
+        if not all({self.celsius_api_key, self.celsius_partner_token}):
+            raise IncompleteCredentialsError("Celcius credentials incomplete")
+
+        return CelciusCredentials(
+            api_key=self.celsius_api_key,
+            partner_token=self.celsius_partner_token,
         )

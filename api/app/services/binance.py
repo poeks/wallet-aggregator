@@ -117,27 +117,22 @@ def get_credentials_status() -> CredentialsStatusOut:
     """
     try:
         credentials = Settings().get_binance_credentials()
-    except IncompleteCredentialsError:
-        return BinanceCredentialsStatus(reason="Credentials incomplete").response_model()
-
-    url = BINANCE_HOST + "/sapi/v1/account/apiRestrictions"
-
-    payload = _get_payload(credentials.secret)
-    res = r.get(url, params=payload, headers=credentials.headers)
-
-    from pprint import pprint
+    except IncompleteCredentialsError as e:
+        return BinanceCredentialsStatus().response_model(reason=str(e))
 
     status = BinanceCredentialsStatus(credentials_submitted=True)
 
+    url = BINANCE_HOST + "/sapi/v1/account/apiRestrictions"
+    payload = _get_payload(credentials.secret)
+    res = r.get(url, params=payload, headers=credentials.headers)
+
     if not res.ok:
-        status.reason = res.reason
-        return status.response_model()
+        return status.response_model(reason=res.reason)
 
     try:
         data = res.json()
     except JSONDecodeError as e:
-        status.reason = str(e)
-        return status
+        return status.response_model(reason=str(e))
 
     if data["enableReading"]:
         status.credentials_valid = True
