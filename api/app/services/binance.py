@@ -118,9 +118,7 @@ def get_credentials_status() -> CredentialsStatusOut:
     try:
         credentials = Settings().get_binance_credentials()
     except IncompleteCredentialsError:
-        return BinanceCredentialsStatus(
-            not_valid_reason="Credentials incomplete"
-        ).response_model()
+        return BinanceCredentialsStatus(reason="Credentials incomplete").response_model()
 
     url = BINANCE_HOST + "/sapi/v1/account/apiRestrictions"
 
@@ -132,13 +130,13 @@ def get_credentials_status() -> CredentialsStatusOut:
     status = BinanceCredentialsStatus(credentials_submitted=True)
 
     if not res.ok:
-        status.not_valid_reason = res.reason
+        status.reason = res.reason
         return status.response_model()
 
     try:
         data = res.json()
     except JSONDecodeError as e:
-        status.not_valid_reason = str(e)
+        status.reason = str(e)
         return status
 
     if data["enableReading"]:

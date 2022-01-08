@@ -10,6 +10,7 @@ from .services.coinmarketcap import get_quoted_wallet
 from .services.coinmarketcap import health_check as coinmarketcap_health_check
 from .services.ethereum import get_ethereum_wallet
 from .services.ethereum import health_check as amberdata_health_check
+from .services.kucoin import get_credentials_status as get_kucoin_status
 from .services.kucoin import get_kucoin_wallet
 
 app = FastAPI()
@@ -41,7 +42,10 @@ def health():
 def wallets():
     """Returns an overview of activated exchange accounts and wallets"""
 
-    wallets = [get_binance_status()]
+    wallets = [
+        # get_binance_status(),
+        get_kucoin_status()
+    ]
 
     return wallets
 
@@ -52,10 +56,10 @@ def current_wallets() -> WalletsCurrent:
     # TODO run async?
     # TODO catch IncompleteSettingsError. What to do? Return?
     wallets = (
-        get_binance_wallet(),
+        # get_binance_wallet(),
         get_kucoin_wallet(),
-        get_ethereum_wallet(),
-        get_celsius_wallet(),
+        # get_ethereum_wallet(),
+        # get_celsius_wallet(),
     )
 
     quoted_wallets = []

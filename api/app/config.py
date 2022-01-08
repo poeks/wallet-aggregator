@@ -1,5 +1,10 @@
+import base64
+import hashlib
+import hmac
+import time
 from typing import Dict
 from typing import Optional
+from typing import Union
 
 from pydantic import BaseSettings
 
@@ -20,9 +25,39 @@ class BinanceCredentials(BaseSettings):
 
 
 class KuCoinCredentials(BaseSettings):
-    kucoin_api_key: str
-    kucoin_secret: str
-    kucoin_passphrase: str
+    api_key: str
+    secret: str
+    passphrase: str
+
+    def headers(self, uri_path: str) -> Dict[str, Union[str, bytes]]:
+        """Generates General headers, suitaible for most GET requests.
+
+        See https://docs.kucoin.com/#authentication.
+        """
+        now_time = int(time.time()) * 1000
+        method = "GET"
+        str_to_sign = str(now_time) + method + uri_path
+        sign = base64.b64encode(
+            hmac.new(
+                self.secret.encode("utf-8"), str_to_sign.encode("utf-8"), hashlib.sha256
+            ).digest()
+        )
+        passphrase = base64.b64encode(
+            hmac.new(
+                self.secret.encode("utf-8"),
+                self.passphrase.encode("utf-8"),
+                hashlib.sha256,
+            ).digest()
+        )
+
+        return {
+            "KC-API-SIGN": sign,
+            "KC-API-TIMESTAMP": str(now_time),
+            "KC-API-KEY": self.api_key,
+            "KC-API-PASSPHRASE": passphrase,
+            "Content-Type": "application/json",
+            "KC-API-KEY-VERSION": "2",
+        }
 
 
 class AmberDataCredentials(BaseSettings):
@@ -95,7 +130,7 @@ class Settings(BaseSettings):
             raise IncompleteCredentialsError("Kucoin credentials incomplete")
 
         return KuCoinCredentials(
-            kucoin_api_key=self.kucoin_api_key,
-            kucoin_secret=self.kucoin_secret,
-            kucoin_passphrase=self.kucoin_passphrase,
+            api_key=self.kucoin_api_key,
+            secret=self.kucoin_secret,
+            passphrase=self.kucoin_passphrase,
         )

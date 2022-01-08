@@ -1,16 +1,17 @@
-import base64
-import hashlib
-import hmac
-import time
 from collections import defaultdict
 from datetime import datetime
+from json import JSONDecodeError
 from typing import Dict
 from typing import List
+from typing import Set
 
 import requests as r
 from pydantic import BaseModel
 
+from ..config import IncompleteCredentialsError
 from ..config import Settings
+from ..credentials import CredentialsStatusOut
+from ..credentials import WalletCredentialsStatus
 from ..schemas import Balance
 from ..schemas import Wallet
 
@@ -36,36 +37,10 @@ def get_kucoin_wallet() -> "Wallet":
 
     All timestamps are in miliseconds.
     """
-    s = Settings().get_kucoin_credentials()
-
-    # See https://docs.kucoin.com/#authentication.
-    now_time = int(time.time()) * 1000
-    method = "GET"
+    credentials = Settings().get_kucoin_credentials()
     uri_path = "/api/v1/accounts"
     url = KUCOIN_HOST + uri_path
-    str_to_sign = str(now_time) + method + uri_path
-    sign = base64.b64encode(
-        hmac.new(
-            s.kucoin_secret.encode("utf-8"), str_to_sign.encode("utf-8"), hashlib.sha256
-        ).digest()
-    )
-    passphrase = base64.b64encode(
-        hmac.new(
-            s.kucoin_secret.encode("utf-8"),
-            s.kucoin_passphrase.encode("utf-8"),
-            hashlib.sha256,
-        ).digest()
-    )
-
-    headers = {
-        "KC-API-SIGN": sign,
-        "KC-API-TIMESTAMP": str(now_time),
-        "KC-API-KEY": s.kucoin_api_key,
-        "KC-API-PASSPHRASE": passphrase,
-        "Content-Type": "application/json",
-        "KC-API-KEY-VERSION": "2",
-    }
-
+    headers = credentials.headers(uri_path=uri_path)
     res = r.get(url, headers=headers)
 
     if not res.ok:
@@ -84,3 +59,46 @@ def get_kucoin_wallet() -> "Wallet":
     ]
 
     return Wallet(name="Kucoin", date=datetime.now(), balances=aggregated_balances)
+
+
+class KucoinCredentialsStatus(WalletCredentialsStatus):
+    @property
+    def name(self) -> str:
+        return "Kucoin"
+
+    @property
+    def credential_fields(self) -> Set[str]:
+        return {"api_key", "secret", "passphrase"}
+
+
+def get_credentials_status() -> CredentialsStatusOut:
+    """
+    Verifies:
+        - credentials are submitted
+        - API key has read access
+    """
+    try:
+        credentials = Settings().get_kucoin_credentials()
+    except IncompleteCredentialsError:
+        return KucoinCredentialsStatus(reason="Credentials incomplete").response_model()
+
+    uri_path = "/api/v1/accounts"
+    url = KUCOIN_HOST + uri_path
+    headers = credentials.headers(uri_path=uri_path)
+    res = r.get(url, headers=headers)
+
+    status = KucoinCredentialsStatus(credentials_submitted=True)
+
+    if not res.ok:
+        status.reason = res.reason
+        return status.response_model()
+
+    try:
+        data = res.json()
+    except JSONDecodeError as e:
+        status.reason = str(e)
+        return status
+
+    status.credentials_valid = True
+
+    return status.response_model()
