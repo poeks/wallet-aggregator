@@ -1,28 +1,26 @@
 from copy import deepcopy
 from datetime import datetime
+from json.decoder import JSONDecodeError
 from typing import ClassVar
 from typing import Dict
 from typing import List
 from typing import Optional
 from typing import Set
+from typing import Tuple
 
 import requests as r
 from pydantic import BaseModel
 
+from ..config import IncompleteSettingsError
 from ..config import Settings
 from ..schemas import Balance
 from ..schemas import QuotedBalance
 from ..schemas import QuotedWallet
 from ..schemas import Wallet
 
-s = Settings()
+credentials = Settings().get_coinmarketcap_credentials()
 
 COINMARKETCAP_HOST = "https://pro-api.coinmarketcap.com"
-
-_HEADERS = {
-    "X-CMC_PRO_API_KEY": s.coinmarketcap_api_key,
-    "Accept": "application/json",
-}
 
 FIAT_SYMBOLS = {"EUR", "USD"}
 UNKNOWN_ASSET_SYMBOLS = {"LDBNB"}
@@ -117,13 +115,13 @@ class CoinMarketCapQuotes(BaseModel):
 
 def _get_coinmarketcap_map(symbols: Set[str]) -> CoinMarketCapMap:
     params = {"symbol": ",".join(symbols)}
-    res = r.get(CoinMarketCapMap.URL, params=params, headers=_HEADERS)
+    res = r.get(CoinMarketCapMap.URL, params=params, headers=credentials.headers)
     return CoinMarketCapMap(**res.json())
 
 
 def _get_asset_quotes(ids: Set[int]) -> CoinMarketCapQuotes:
     params = {"id": ",".join(map(str, ids))}
-    res = r.get(CoinMarketCapQuotes.URL, params=params, headers=_HEADERS)
+    res = r.get(CoinMarketCapQuotes.URL, params=params, headers=credentials.headers)
     return CoinMarketCapQuotes(**res.json())
 
 
@@ -144,8 +142,49 @@ def get_quoted_wallet(wallet: Wallet) -> QuotedWallet:
     coinmarketcap_map = _get_coinmarketcap_map(
         symbols
     )  # TODO might be done via a database lookup
-    id_map = coinmarketcap_map.get_symbol_id_map()
 
     quotes = _get_asset_quotes(coinmarketcap_map.get_asset_ids())
 
     return quotes.get_quoted_wallet(wallet)
+
+
+def health_check() -> Tuple[bool, str]:
+    try:
+        credentials = Settings().get_coinmarketcap_credentials()
+    except IncompleteSettingsError as e:
+        return False, str(e)
+
+    url = COINMARKETCAP_HOST + "/v1/key/info"
+    res = r.get(url, headers=credentials.headers)
+
+    if not res.ok:
+        try:
+            data = res.json()
+        except JSONDecodeError:
+            return False, f"Response from CoinMarketCap not ok ({res.reason})"
+        return False, data["status"]["error_message"]
+
+    data = res.json()["data"]
+    usage = data["usage"]
+    plan = data["plan"]
+
+    requests_left = usage["current_minute"]["requests_left"]
+    if requests_left == 0:
+        limit = plan["rate_limit_minute"]
+        return False, f"Minute rate limit exceded (limit = {limit})."
+
+    day_credits_left = usage["current_day"]["credits_left"]
+    if day_credits_left == 0:
+        limit = plan["credit_limit_daily"]
+        reset = plan["credit_limit_daily_reset"]
+        return False, f"Day credits exceded (limit = {limit}). Reset {reset.lower()}"
+
+    month_credits_exceeded = (
+        usage["current_month"]["credits_used"] > usage["current_month"]["credits_left"]
+    )
+    if month_credits_exceeded:
+        limit = plan["credit_limit_monthly"]
+        reset = plan["credit_limit_monthly_reset"]
+        return False, "Month credits exceded"
+
+    return True, "ok"
